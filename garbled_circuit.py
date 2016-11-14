@@ -52,16 +52,28 @@ class Gate:
         self.garbled_output_values = None
 
     def __call__(self):
+        input_vals = [input_gate() for input_gate in self.inputs]
         if not self.garbled:
-            input_vals = [input_gate() for input_gate in self.inputs]
             input_vals = tuple(input_vals)
             return self.gate_lookup[input_vals]
+        else:
+            xor_values = tuple([x[-1] for x in input_vals])
+            keys = [x[0] for x in input_vals]
 
-    def garble(self, generate_key, encrypt):
+            encrypted_value = self.gate_lookup[xor_values]
+            key, xor_output = int_to_tuple(
+                recursive_decrypt(encrypted_value, self.decrypt, keys)
+            )
+            return (key, xor_output)
+
+
+
+    def garble(self, generate_key, encrypt, decrypt):
         '''
         Garble the circuit if not already garbled, return the ka0, ka1 tuple, anlong with the xor bit value for the wire.
 
         encrypt(value, key)
+        decrypt(value, key)
         '''
         if self.garbled:
             assert self.garbled_output_values != None
@@ -74,11 +86,6 @@ class Gate:
             input_gate.garble(generate_key, encrypt)
             for input_gate in self.inputs
         ]
-        # reverse lookup from key value to boolean value
-        #  i think this is where the xoring thing comes in
-        # garbled_input_lookup = []
-        # for k1, k0 in garbled_output_values:
-        #     garbled_input_lookup += {k0: 0, k1: 1}
 
         output_keys = (generate_key(), generate_key())
         # TODO:
@@ -97,7 +104,7 @@ class Gate:
         for lookup_key in boolean_permutations:
             key_indeces = tuple([
                 lookup_value ^ garbled_xor_flag
-                for lookup_value, garbled_xor_flag in zip(lookup_key, garbled_xor_flag)
+                for lookup_value, garbled_xor_flag in zip(lookup_key, garbled_xor_flags)
             ])
 
             gate_value = self.gate_lookup[key_indeces]
@@ -105,38 +112,21 @@ class Gate:
 
             xor_value = xor_flag ^ gate_value
 
-            encryption_keys = [keys[x] for x, keys in zip(input_keys, key_indeces)]
+            encryption_keys = [keys[key_index] for keys, key_index in zip(input_keys, key_indeces)]
 
             # aplly encryption in reverse, so decription is in order
             encrypted_value = recursive_encrypt(
-                tuple_to_int(gate_value, xor_value),
+                tuple_to_int((output_value, xor_value)),
                 encrypt,
-                list(reversed(encrypted_key))
+                list(reversed(encryption_keys))
             )
-
             new_lookup[lookup_key] = encrypted_value
-            # encrypted_key = ()
-            # for i in range(len(key)):
-            #     encrypted_key += garbled_input_values[i][key[i]]
-            #
-            # assert len(encrypted_key) == len(key)
-            # boolean_value = self.gate_lookup[key]
-            # boolean_key_value = garbled_output_values[boolean_value]
-            #
-            # # apply encryption in reverse
-            #
-            # xor_for_key = xor_flag if boolean_value == 1 else int(not(xor_flag))
-            #
-            # encrypted_value = recursive_encrypt(
-            #     tuple_to_int(boolean_key_value, xor_for_keyflag),
-            #     encrypt,
-            #     list(reversed(encrypted_key))
-            # )
-            #
-            # new_lookup[encrypted_key] = encrypted_value
+
+        self.gate_lookup = new_lookup
 
         self.garbled_output_values = output_keys + (xor_flag,)
         self.garbled = True
+        self.decrypt = decrypt
         return self.garbled_output_values
 
 
@@ -181,6 +171,12 @@ def recursive_encrypt(value, encrypt, keys):
     if len(keys) == 0:
         return value
     return recursive_encrypt(encrypt(value, keys[0]), encrypt, keys[1:])
+
+def recursive_decrypt(value, decrypt, keys):
+    if len(keys) == 0:
+        return value
+    return recursive_decrypt(decrypt(value, keys[0]) ,decrypt, keys[1:])
+
 
 def tuple_to_int(t):
     '''
