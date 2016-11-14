@@ -1,5 +1,5 @@
 
-
+from random import random
 
 
 class InputGate:
@@ -19,7 +19,7 @@ class InputGate:
             return self.garbled_output_values
         else:
             output_keys = (generate_key(), generate_key())
-            xor_flag = 0
+            xor_flag = random_bit()
             self.garbled = True
             self.garbled_output_values = output_keys + (xor_flag,)
             return self.garbled_output_values
@@ -90,7 +90,7 @@ class Gate:
         output_keys = (generate_key(), generate_key())
         # TODO:
         # this is the value of the xor flag of k1
-        xor_flag = 0
+        xor_flag = random_bit()
 
         boolean_permutations = permutations_of_input([
             (0,1) for i in range(len(garbled_input_values))])
@@ -189,3 +189,6 @@ def int_to_tuple(x):
     flag = x % 2
     i = x // 2
     return (i, flag)
+
+def random_bit():
+    return int(random() > 0.5)

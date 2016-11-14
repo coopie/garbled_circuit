@@ -39,7 +39,6 @@ def test_tuple_to_int():
     assert gc.tuple_to_int((4,0)) == 8
 
 
-
 def test_garble_input_gate():
     gate = gc.InputGate()
     gate.set_value(0)
@@ -56,7 +55,19 @@ def test_garble_input_gate():
     k0, k1, xor_flag = gate.garble(gen_key, encrypt)
     assert k0 == 11
     assert k1 == 12
-    assert gate() == (k0, 0)
+
+    assert gate() == (k0, xor_flag ^ 0)
+    gate = gc.InputGate()
+    gate.set_value(1)
+    assert gate() == 1
+
+    def encrypt(key, value): pass
+
+    k0, k1, xor_flag = gate.garble(gen_key, encrypt)
+    assert k0 == 13
+    assert k1 == 14
+    assert gate() == (k1, xor_flag ^ 1)
+
 
 def test_garbled_and_gate():
     input0 = gc.InputGate()
