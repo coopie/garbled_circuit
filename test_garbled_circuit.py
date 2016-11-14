@@ -23,6 +23,11 @@ def test_running_circuit():
     gate = gc.or_gate(ret_0, ret_1)
     assert gate() == 1
 
+    gate = gc.not_gate(ret_1)
+    assert gate() == 0
+    gate = gc.not_gate(ret_0)
+    assert gate() == 1
+
 
 def test_permutations_of_input():
     thing = [(0,1), (2,3)]
@@ -51,8 +56,9 @@ def test_garble_input_gate():
         return i
 
     def encrypt(key, value): pass
+    def decrypt(key, value): pass
 
-    k0, k1, xor_flag = gate.garble(gen_key, encrypt)
+    k0, k1, xor_flag = gate.garble(gen_key, encrypt, decrypt)
     assert k0 == 11
     assert k1 == 12
 
@@ -61,9 +67,7 @@ def test_garble_input_gate():
     gate.set_value(1)
     assert gate() == 1
 
-    def encrypt(key, value): pass
-
-    k0, k1, xor_flag = gate.garble(gen_key, encrypt)
+    k0, k1, xor_flag = gate.garble(gen_key, encrypt, decrypt)
     assert k0 == 13
     assert k1 == 14
     assert gate() == (k1, xor_flag ^ 1)
@@ -78,7 +82,10 @@ def test_garbled_and_gate():
     input1.set_value(1)
     assert input1() == 1
 
-    and_gate = gc.and_gate(input0, input1)
+    not0 = gc.not_gate(input0)
+    assert not0() == 1
+
+    and_gate = gc.and_gate(not0, input1)
 
 
     i = 10
@@ -91,10 +98,12 @@ def test_garbled_and_gate():
     def decrypt(key, value): return key / value
 
     k0, k1, xor_flag = and_gate.garble(gen_key, encrypt, decrypt)
-    assert k0 == 15
-    assert k1 == 16
 
-    assert and_gate() == (k0, xor_flag ^ 0)
+    assert k0 == 17
+    assert k1 == 18
+    print(and_gate())
+
+    assert and_gate() == (k1, xor_flag ^ 1)
 
     input0.set_value(1)
-    assert and_gate() == (k1, xor_flag ^ 1)
+    assert and_gate() == (k0, xor_flag ^ 0)

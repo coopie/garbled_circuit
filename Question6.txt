@@ -1,0 +1,16 @@
+Most of the changes required for OT in evaluating the garbled circuit are changing the ordering of the computation and making the code work on different computers over the internet.
+
+
+One small change that would need to be made is to make the inputGates take an encrypted value as an input, rather than an actual boolean value. For the sake of this exercise, the InputGate class accepts a boolean (0 or 1) as input, which is then converted into it's corresponding key.
+
+Another change would be to make sure no artifacts of the circuit model hint at any more information. for example. The garbled gates in this implementation hold which keys represent 0 and 1 and the value of the Xor flag. As these are only kept in the gate for debugging issues, these values could easily be removed before being sent off to Bob. 
+
+With this is mind, and assuming the circuit can be serialised. the steps goes as follows:
+
+* Alice creates the circuit, and sets the input values of the InputGates corresponding to her input into the circuit.
+
+* Alice and Bob run OT for each of bobs inputs (C and D) to know his input into the circuit.
+
+* Alice sends Bob a serialised version of the circuit, Bob deserialises and evaluates the circuit with his encrypted input and gets the output key.
+
+* Bob asks Alice for the end meaning of the encrypted result.

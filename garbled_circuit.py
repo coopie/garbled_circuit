@@ -11,7 +11,7 @@ class InputGate:
     def set_value(self, value):
         self.value = value
 
-    def garble(self, generate_key, encrypt):
+    def garble(self, generate_key, encrypt, decrypt):
         if self.garbled:
             assert self.garbled_output_values != None
             assert type(self.garbled_output_values) == tuple
@@ -83,18 +83,15 @@ class Gate:
 
 
         garbled_input_values = [
-            input_gate.garble(generate_key, encrypt)
+            input_gate.garble(generate_key, encrypt, decrypt)
             for input_gate in self.inputs
         ]
 
         output_keys = (generate_key(), generate_key())
-        # TODO:
-        # this is the value of the xor flag of k1
         xor_flag = random_bit()
 
         boolean_permutations = permutations_of_input([
             (0,1) for i in range(len(garbled_input_values))])
-
 
         new_lookup = {}
 
@@ -155,6 +152,14 @@ def xor_gate(*inputs):
     def f(a, b):
         return int(a != b)
     return logic_bgate(f, *inputs)
+
+def not_gate(*inputs):
+    assert len(inputs) == 1
+    lookup = {
+        (0,): 1,
+        (1,): 0
+    }
+    return Gate(lookup, *inputs)
 
 def permutations_of_input(inputs):
     if inputs == []:

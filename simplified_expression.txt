@@ -4,6 +4,6 @@ P = (C'A) or B'D(A exor C)'
 
 for the least significant bit, Q:
 
-Q = (A exor B)
+Q = (A exor C)
     or
-    (B exor C)
+    (B exor D)
