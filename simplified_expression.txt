@@ -1,0 +1,9 @@
+for the most significant bit, P:
+
+P = (C'A) or B'D(A exor C)'
+
+for the least significant bit, Q:
+
+Q = (A exor B)
+    or
+    (B exor C)
